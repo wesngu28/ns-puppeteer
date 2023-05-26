@@ -8,6 +8,6 @@ export async function checkForExistence(userAgent: string, username: string, pas
         })
     const existence = res.status
     if (existence === 404) return "Not found"
-    if (existence === 200) return `Successfully logged into ${username}`
+    if (existence === 200 || existence === 409) return `Successfully logged into ${username}`
     return "Not found"
 }

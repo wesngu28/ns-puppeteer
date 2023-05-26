@@ -4,6 +4,7 @@
 	import { sleep } from '../lib/helpers/sleep';
 	import { checkForExistence } from '../lib/helpers/checkForExistence';
 	import { restoreRequest } from '../lib/helpers/restoreRequest';
+	import { getDate } from '$lib/helpers/getDate';
 
 	// State and ref
 	let files: FileList;
@@ -15,6 +16,7 @@
 	let currentStatus = 0;
 	let nationList = 'Enter nations';
 	let confirm: HTMLButtonElement | null = null;
+	let messages: string[] = []
 
 	// When app launches, pull any existing data from local storage.
 	onMount(() => {
@@ -37,7 +39,7 @@
 			reader.readAsText(files[0]);
 		}
 	}
-
+	
 	// Async function that returns a promise to delay execution during restores
 	async function waitForButtonClick(): Promise<void> {
 		await new Promise<void>((resolve) => {
@@ -60,7 +62,7 @@
 			if (!username || !password) continue;
 			const existence = await checkForExistence(userAgent, username, password);
 			if (existence !== 'Not found') {
-				message = existence
+				messages = [...messages, existence]
 				currentStatus++;
 				await sleep(1000);
 			} else {
@@ -73,9 +75,9 @@
 				await restoreRequest(userAgent, username, password);
 				const existence = await checkForExistence(userAgent, username, password);
 				if (existence !== 'Not found') {
-					message = `Successfully restored ${username}`
+					messages = [...messages, `Successfully restored ${username}`]
 				} else {
-					message = `Are you sure ${username} is a nation or you provided the right credentials? Skipping...`
+					messages = [...messages, `Are you sure ${username} is a nation or you provided the right credentials? Skipping...`]
 				}
 				restoreDisable = true
 				currentStatus++;
@@ -84,13 +86,13 @@
 			i++
 		}
 		if (!cancel) {
-			message = 'Process successfully finished.'
+			messages = [...messages, 'Process successfully finished.']
 			await sleep(1000);
 			currentStatus = 0;
 			running = false;
 		}
 		if (cancel) {
-			message = 'Process cancelled.'
+			messages = [...messages, 'Process cancelled.']
 			await sleep(1000);
 			currentStatus = 0;
 			running = false;
@@ -184,6 +186,17 @@
 			bind:this={confirm}
 			class="mx-auto mt-4 h-10 mb-1 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50"
 			>Restore</button
+		>
+	{/if}
+	{#if messages.length > 0}
+		<h2 class="text-xl mt-4">Log</h2>
+		{#each messages as message}
+			<p class="mt-2">{getDate()}: {message}</p>
+		{/each}
+		<button
+			on:click={() => messages = []}
+			class="mb-8 w-max mt-4 h-10 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50"
+			>Clear Logs</button
 		>
 	{/if}
 </div>
