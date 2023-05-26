@@ -27,7 +27,14 @@
             reader.readAsText(files[0])
         }
     }
-
+    let confirm: HTMLButtonElement | null = null
+    async function waitForButtonClick(): Promise<void> {
+        await new Promise<void>((resolve) => {
+            confirm!.addEventListener('click', () => {
+                resolve();
+            });
+        });
+    }
 </script>
 
 <header class="bg-gray-50 w-full text-center border-gray-200 border">
@@ -41,6 +48,7 @@
         e.preventDefault()
         const parser = new XMLParser()
         let nations = nationList.split('\n')
+        running = true
         message = "Starting login process..."
         await sleep(2500)
         for (let i = 0; i < nations.length; i++) {
@@ -51,7 +59,8 @@
                  message = existence
             } else {
                 startButtonText = "Restore?"
-                message = `${username} needs to be restored.`
+                message = `${username} needs to be restored. Restore?`
+                await waitForButtonClick()
                 await restoreRequest(userAgent, username, password)
                 const existence = await checkForExistence(userAgent, parser, username, password)
                 if (existence !== "Not found") {
@@ -66,6 +75,7 @@
         message = "Process successfully finished."
         await sleep(2500)
         currentStatus = 0
+        running = false
     }}>
         <div class="mb-2">
             <label for="userAgent" class="mb-2">User Agent</label>
@@ -90,6 +100,12 @@
             }} class="mx-auto mt-4 h-10 mb-1 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50">Save to File</button>
         </div>
     </form>
+
+    {#if running}
+        <p class="mt-2">{`${currentStatus}/${nationList.split('\n').length}`}</p>
+        <p class="mt-2">{message}</p>
+        <button bind:this={confirm} class="mx-auto mt-4 h-10 mb-1 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50">Restore</button>
+    {/if}
 </div>
 
 <iframe id="iframe" style="position: absolute; left: -5000px;" src="/iframe.html" title="iFrame for logging/restoring nations" />
