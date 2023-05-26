@@ -85,7 +85,7 @@
 </script>
 
 <header class="bg-gray-50 w-full text-center border-gray-200 border">
-	<h1 class="text-3xl my-8 wrap break-words">NationStates Puppet Logger</h1>
+	<h1 class="text-3xl my-8 wrap break-words">NS Puppeteer</h1>
 </header>
 
 <div class="flex flex-col">
