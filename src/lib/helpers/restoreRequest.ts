@@ -1,5 +1,7 @@
 import { sleep } from "./sleep";
 
+// Code largely adopted from Auralia, adjusted to use vanilla JS as opposed to jquery, as well as using more
+// async await then promises.
 export async function restoreRequest(userAgent: string, username: string, password: string) {
     let resolved = false;
 
@@ -27,7 +29,7 @@ export async function restoreRequest(userAgent: string, username: string, passwo
     iframe.src = "iframe.html";
 
     if (!resolved) {
-        await sleep(15000)
+        await sleep(6500)
         return false
     }
 }
