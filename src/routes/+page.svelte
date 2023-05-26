@@ -7,8 +7,9 @@
 
 	// State and ref
 	let files: FileList;
-	let startButtonText = 'Start';
+	let restoreDisable = true;
 	let running = false;
+	let cancel = false
 	let message = '';
 	let userAgent = '';
 	let currentStatus = 0;
@@ -53,14 +54,17 @@
 		running = true;
 		message = 'Starting login process...';
 		await sleep(1000);
-		for (let i = 0; i < nations.length; i++) {
+		let i = 0;
+		while (i < nations.length && !cancel) {
 			let [username, password] = nations[i].split(',');
 			if (!username || !password) continue;
 			const existence = await checkForExistence(userAgent, username, password);
 			if (existence !== 'Not found') {
-				message = existence;
+				message = existence
+				currentStatus++;
+				await sleep(1000);
 			} else {
-				startButtonText = 'Restore?';
+				restoreDisable = false
 				message = `${username} needs to be restored. Restore?`;
 				await waitForButtonClick();
 				message = `Restoring ${username}, please wait...`;
@@ -69,18 +73,29 @@
 				await restoreRequest(userAgent, username, password);
 				const existence = await checkForExistence(userAgent, username, password);
 				if (existence !== 'Not found') {
-					message = existence;
+					message = `Successfully restored ${username}`
 				} else {
-					message = `Are you sure ${username} is a nation or you provided the right credentials? Skipping...`;
+					message = `Are you sure ${username} is a nation or you provided the right credentials? Skipping...`
 				}
+				restoreDisable = true
+				currentStatus++;
+				await sleep(1000);
 			}
-			currentStatus++;
-			await sleep(1000);
+			i++
 		}
-		message = 'Process successfully finished.';
-		await sleep(1000);
-		currentStatus = 0;
-		running = false;
+		if (!cancel) {
+			message = 'Process successfully finished.'
+			await sleep(1000);
+			currentStatus = 0;
+			running = false;
+		}
+		if (cancel) {
+			message = 'Process cancelled.'
+			await sleep(1000);
+			currentStatus = 0;
+			running = false;
+			cancel = false;
+		}
 	}
 </script>
 
@@ -131,6 +146,12 @@
 				type="submit">Start</button
 			>
 			<button
+				disabled={!running}
+				on:click={() => cancel = true}
+				class="disabled:opacity-50 mx-auto mt-4 h-10 mb-1 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50"
+				type="button">Cancel</button
+			>
+			<button
 				type="button"
 				on:click={() => localStorage.setItem('nationList', nationList)}
 				class="mx-auto mt-4 h-10 mb-1 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50"
@@ -159,6 +180,7 @@
 		<p class="mt-2">{`${currentStatus}/${nationList.split('\n').length}`}</p>
 		<p class="mt-2">{message}</p>
 		<button
+			disabled={restoreDisable}
 			bind:this={confirm}
 			class="mx-auto mt-4 h-10 mb-1 text-sm transition border-0 rounded appearance-none bg-blue-400 p-2 hover:bg-opacity-50"
 			>Restore</button
